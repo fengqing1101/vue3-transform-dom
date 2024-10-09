@@ -1,4 +1,4 @@
-# vue-tranform-dom
+# vue3-transform-dom
 
 一个基于Vue3的可以缩放和拖动dom元素的组件
 
@@ -20,9 +20,15 @@ npm install vue3-transform-dom --save
 |maxWH|dom被放大到的最大的宽高尺寸|`number`|Infinity|
 
 #### 插槽
-|插槽名|说明|
-|:------|:------|
-|default|自定义默认内容|
+- 默认插槽
+```typescript
+{
+  /**
+   * @see {https://www.npmjs.com/package/transfer-to-window}
+   */
+  transfer2window: TransferTowindow;
+}
+```
 
 #### 方法与属性
 - 获取鼠标相对于el的坐标

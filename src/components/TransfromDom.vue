@@ -116,7 +116,7 @@ defineExpose({
   <div ref="el" style="width: 100%;height: 100%;overflow: hidden;position: relative;" @wheel="wheel"
     @mousedown="mousedown">
     <div style="position: relative;transform-origin: 0 0;" :style="style">
-      <slot :scale="transfer2window.scale"></slot>
+      <slot :transfer2window="transfer2window"></slot>
     </div>
   </div>
 </template>
