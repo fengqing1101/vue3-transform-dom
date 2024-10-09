@@ -2,7 +2,7 @@
   "name": "vue3-transform-dom",
   "author": "fengqing",
   "description": "A component based on vue3 that can scale and drag dom...",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "scripts": {
     "dev": "vite",
     "build": "vite build && npm run tsc",
@@ -15,6 +15,7 @@
   ],
   "dependencies": {
     "esbuild": "^0.18.13",
+    "transfer-to-window": "^1.0.0",
     "vue": "^3.3.4"
   },
   "devDependencies": {
@@ -23,7 +24,10 @@
     "vite": "4.3.2",
     "vue-tsc": "1.4.2"
   },
-  "files": ["dist/*"],
+  "files": [
+    "dist/*"
+  ],
+  "type": "module",
   "types": "dist/index.d.ts",
-  "main": "dist/index.mjs"
+  "main": "dist/index.js"
 }

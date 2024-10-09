@@ -16,7 +16,7 @@ const array = new Array(100).fill(null).map(() => {
 
 const el = ref<InstanceType<typeof TransfromDom> | null>(null);
 function keyup(e: KeyboardEvent) {
-  if (e.key === ' ') el.value?.resize();
+  if (e.key === ' ') el.value?.transfer2window.resize();
 }
 
 onMounted(() => {
@@ -30,12 +30,10 @@ onUnmounted(() => {
 
 <template>
   <div>
-    <transfrom-dom ref="el" :width="width" :height="height" disable-move>
-      <template #inner>
-        <div class="inner">
-          <div v-for="(style, index) in array" :key="index" :data-index="index" :style="style"></div>
-        </div>
-      </template>
+    <transfrom-dom ref="el" :width="width" :height="height" :min-w-h="100" disable-move>
+      <div class="inner">
+        <div v-for="(style, index) in array" :key="index" :data-index="index" :style="style"></div>
+      </div>
     </transfrom-dom>
   </div>
 </template>
