@@ -18,6 +18,8 @@ npm install vue3-transform-dom --save
 |scaleStep|宽|`number`|0.1|
 |minWH|dom被缩小到的最小的宽高尺寸|`number`|1|
 |maxWH|dom被放大到的最大的宽高尺寸|`number`|Infinity|
+|limitInWindow|是否限制数据始终有区域位于窗口内部|`boolean`|false|
+|limitSize|显示在窗口内部的最小值|`number`|100|
 
 #### 插槽
 - 默认插槽
@@ -35,9 +37,25 @@ npm install vue3-transform-dom --save
 ```typescript
 /**
  * 获取鼠标相对于el的坐标
- * @returns [x, y]
  */
-getPosition(e: MouseEvent): number[]
+getPosition(e: MouseEvent): { x: number, y: number }
+```
+
+- 强制刷新
+```typescript
+/**
+ * 强制刷新
+ */
+forceFresh()
+```
+
+- 中心缩放
+```typescript
+/**
+ * 中心缩放
+ * @param zoomOut 放大
+ */
+zoomByCenter(zoomOut: boolean)
 ```
 
 - `transfer2window` 参考[transfer-to-window](https://www.npmjs.com/package/transfer-to-window)

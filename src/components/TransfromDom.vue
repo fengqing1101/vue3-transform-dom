@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { TransferToWindow } from 'transfer-to-window';
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watchEffect } from 'vue';
 import defaultTransferToWindow from './defaultTransferToWindow';
+const emit = defineEmits(['transform']);
 
 const props = defineProps({
   width: {
@@ -20,7 +21,19 @@ const props = defineProps({
     type: Number,
     default: Infinity,
   },
+  limitInWindow: {
+    type: Boolean,
+    default: false,
+  },
+  limitSize: {
+    type: Number,
+    default: 100,
+  },
   disableMove: {
+    type: Boolean,
+    default: false,
+  },
+  disableContextMove: {
     type: Boolean,
     default: false,
   },
@@ -45,7 +58,24 @@ const style = computed(() => {
   }
 })
 
+watchEffect(() => {
+  const { outw, outh, scale, dx, dy } = transfer2window.value;
+  el.value && emit('transform', [outw, outh, scale, dx, dy]);
+})
+
 onMounted(() => {
+  document.addEventListener('keyup', keyup);
+  forceFresh();
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keyup', keyup);
+})
+
+/**
+ * 强制刷新
+ */
+function forceFresh() {
   transfer2window.value = new TransferToWindow({
     inw: props.width,
     inh: props.height,
@@ -53,17 +83,32 @@ onMounted(() => {
     outh: el.value.clientHeight,
     minWH: props.minWH,
     maxWH: props.maxWH,
+    limitInWindow: props.limitInWindow,
+    limitSize: props.limitSize,
   })
-})
+}
 
+export interface coor {
+  x: number;
+  y: number;
+}
 
 /**
  * 获取鼠标相对于el的坐标
- * @returns [x, y]
  */
-function getPosition(e: MouseEvent): number[] {
+function getOutCoorPosition(e: MouseEvent): coor {
   let rect = el.value.getBoundingClientRect();
-  return [e.pageX - rect.left, e.pageY - rect.top];
+  return { x: e.pageX - rect.left, y: e.pageY - rect.top };
+}
+
+/**
+ * 获取坐标
+ */
+function getPosition(e: MouseEvent, limitInWindow?: boolean): coor | null {
+  const coor = getOutCoorPosition(e);
+  const pos = transfer2window.value.transOutToIn([coor.x, coor.y]);
+  return (limitInWindow && !transfer2window.value.inCoorIsIn(pos[0], pos[1])) ?
+    null : { x: pos[0], y: pos[1] };
 }
 
 /**
@@ -72,18 +117,19 @@ function getPosition(e: MouseEvent): number[] {
 function wheel(e: WheelEvent) {
   if (props.disableScale) return;
   e.preventDefault()
-  const coor = getPosition(e);
+  const coor = getOutCoorPosition(e);
   const ratio = 1 - props.scaleStep * Math.sign(e.deltaY);
-  transfer2window.value.zoom(coor[0], coor[1], ratio);
+  transfer2window.value.zoom(coor.x, coor.y, ratio);
 }
 
-let pos: number[];
+let pos: coor;
 /**
  * 鼠标按下事件，平移$tranformDIV
  */
 function mousedown(e: MouseEvent) {
   if (props.disableMove) return;
-  pos = getPosition(e);
+  if (props.disableContextMove && e.button === 2) return;
+  pos = getOutCoorPosition(e);
   document.addEventListener('mousemove', mousemove)
   document.addEventListener('mouseup', mouseup)
 }
@@ -93,8 +139,8 @@ function mousedown(e: MouseEvent) {
  * 鼠标未按下移动事件，获取当前鼠标位置对应图像的灰度值
  */
 function mousemove(e: MouseEvent) {
-  let curPos = getPosition(e);
-  transfer2window.value.translate(curPos[0] - pos[0], curPos[1] - pos[1]);
+  let curPos = getOutCoorPosition(e);
+  transfer2window.value.translate(curPos.x - pos.x, curPos.y - pos.y);
   pos = curPos;
 }
 
@@ -106,9 +152,32 @@ function mouseup() {
   document.removeEventListener('mouseup', mouseup)
 }
 
+/**
+ * 鼠标键盘事件
+ */
+function keyup(e: KeyboardEvent) {
+  if (!el.value) return
+  if ((e as any).target.nodeName === 'INPUT') return
+  if (e.key === 'Escape' || e.key === ' ') transfer2window.value.resize()
+}
+
+/**
+ * 中心缩放
+ */
+function zoomByCenter(zoomOut: boolean) {
+  const ratio = zoomOut ? 1 + props.scaleStep : 1 - props.scaleStep;
+  transfer2window.value.zoom(
+    transfer2window.value.outw / 2,
+    transfer2window.value.outh / 2,
+    ratio,
+  )
+}
+
 defineExpose({
   transfer2window,
   getPosition,
+  forceFresh,
+  zoomByCenter,
 })
 </script>
 
@@ -116,7 +185,7 @@ defineExpose({
   <div ref="el" style="width: 100%;height: 100%;overflow: hidden;position: relative;" @wheel="wheel"
     @mousedown="mousedown">
     <div style="position: relative;transform-origin: 0 0;" :style="style">
-      <slot :transfer2window="transfer2window"></slot>
+      <slot :transfer2window="transfer2window" :scale="transfer2window.scale"></slot>
     </div>
   </div>
 </template>
