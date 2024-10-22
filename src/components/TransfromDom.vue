@@ -158,7 +158,7 @@ function mouseup() {
 function keyup(e: KeyboardEvent) {
   if (!el.value) return
   if ((e as any).target.nodeName === 'INPUT') return
-  if (e.key === 'Escape' || e.key === ' ') transfer2window.value.resize()
+  if (e.key === 'Escape' || e.key === ' ') forceFresh()
 }
 
 /**
